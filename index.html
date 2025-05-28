@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Lista de Compras de Supermercado</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #F8F9FA; /* Cor de fundo suave */
+        }
+
+        .card {
+            transition: all 0.3s ease; /* Transição suave para hover */
+        }
+
+        .card:hover {
+            transform: translateY(-5px); /* Efeito de elevação no hover */
+        }
+
+        /* Estiliza o label quando o checkbox está marcado */
+        .checkbox-item:checked+label {
+            background-color: #E6F3FF; /* Cor de fundo para item selecionado (azul claro) */
+            border-color: #007BFF; /* Cor da borda para item selecionado (azul) */
+        }
+
+        /* Mostra o ícone de check quando o checkbox está marcado */
+        .checkbox-item:checked+label .check-icon {
+            display: block;
+        }
+
+        /* Estilos para impressão e PDF */
+        .print-pdf-only {
+            display: none; /* Escondido por padrão */
+        }
+
+        @media print {
+            .no-print {
+                display: none; /* Esconde elementos que não devem ser impressos */
+            }
+
+            .print-pdf-only {
+                display: block !important; /* Mostra elementos na impressão */
+            }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <div class="text-center mb-8 no-print">
+            <h1 class="text-4xl font-bold text-blue-700 mb-2">Gerador de Lista de Compras</h1>
+            <p class="text-gray-600">Selecione os itens e defina as quantidades para sua lista de supermercado!</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8 no-print">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h2 class="text-xl font-semibold mb-4 text-blue-700 border-b pb-2">Hortifrúti</h2>
+                    <div class="space-y-3" id="hortifruti-container">
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-semibold mb-4 text-blue-700 border-b pb-2">Padaria e Laticínios</h2>
+                    <div class="space-y-3" id="padaria-laticinios-container">
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <h2 class="text-xl font-semibold mb-4 text-blue-700 border-b pb-2">Mercearia e Limpeza</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" id="mercearia-limpeza-container">
+                </div>
+            </div>
+             <div class="mt-8">
+                <h2 class="text-xl font-semibold mb-4 text-blue-700 border-b pb-2">Congelados e Outros</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" id="congelados-outros-container">
+                </div>
+            </div>
+        </div>
+
+        <div id="area-lista-compras" class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-center text-blue-600 mb-4">Sua Lista de Compras</h2>
+            <div id="lista-compras" class="space-y-2 mb-6">
+                <p class="text-gray-500 text-center italic">Selecione os itens acima e insira as quantidades para gerar sua lista</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4 no-print">
+                <button id="btn-limpar" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition">
+                    Limpar Seleção e Quantidades
+                </button>
+                <button id="btn-imprimir" class="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition">
+                    Imprimir Lista
+                </button>
+                <button id="btn-pdf" class="w-full sm:w-auto bg-blue-700 hover:bg-blue-800 text-white font-medium py-2 px-4 rounded-lg transition">
+                    Gerar PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const { jsPDF } = window.jspdf;
+
+            const hortifrutiContainer = document.getElementById('hortifruti-container');
+            const padariaLaticiniosContainer = document.getElementById('padaria-laticinios-container');
+            const merceariaLimpezaContainer = document.getElementById('mercearia-limpeza-container');
+            const congeladosOutrosContainer = document.getElementById('congelados-outros-container');
+            const listaComprasDiv = document.getElementById('lista-compras');
+            const btnLimpar = document.getElementById('btn-limpar');
+            const btnImprimir = document.getElementById('btn-imprimir');
+            const btnPdf = document.getElementById('btn-pdf');
+
+            // Dados dos Itens com quantidades iniciais sugeridas (que o usuário vai modificar)
+            const hortifruti = [
+                { id: 'banana', nome: 'Banana', quantidade: 6, unidade: 'unid', icone: '🍌' },
+                { id: 'tomate', nome: 'Tomate', quantidade: 1, unidade: 'kg', icone: '🍅' },
+                { id: 'maca', nome: 'Maçã', quantidade: 5, unidade: 'unid', icone: '🍎' },
+                { id: 'batata', nome: 'Batata', quantidade: 5, unidade: 'unid', icone: '🥔' },
+                { id: 'laranja', nome: 'Laranja', quantidade: 8, unidade: 'unid', icone: '🍊' },
+                { id: 'tomate', nome: 'Tomate', quantidade: 1, unidade: 'kg', icone: '🍅' },
+                { id: 'alface', nome: 'Alface', quantidade: 1, unidade: 'unid', icone: '🥬' },
+                { id: 'cebola', nome: 'Cebola', quantidade: 0.5, unidade: 'kg', icone: '🧅' },
+                { id: 'cenoura', nome: 'Cenoura', quantidade: 0.5, unidade: 'kg', icone: '🥕' }
+            ];
+
+            const padariaLaticinios = [
+                { id: 'pao-forma', nome: 'Pão de Forma', quantidade: 1, unidade: 'unid', icone: '🍞' },
+                { id: 'leite', nome: 'Leite', quantidade: 2, unidade: 'L', icone: '🥛' },
+                { id: 'queijo-prato', nome: 'Queijo Prato', quantidade: 0.3, unidade: 'kg', icone: '🧀' },
+                { id: 'manteiga', nome: 'Manteiga', quantidade: 0.2, unidade: 'kg', icone: '🧈' },
+                { id: 'iogurte', nome: 'Iogurte', quantidade: 4, unidade: 'unid', icone: '🍦' }
+            ];
+
+            const merceariaLimpeza = [
+                { id: 'arroz', nome: 'Arroz', quantidade: 5, unidade: 'kg', icone: '🍚' },
+                { id: 'feijao', nome: 'Feijão', quantidade: 1, unidade: 'kg', icone: '🫘' },
+                { id: 'oleo', nome: 'Óleo de Cozinha', quantidade: 1, unidade: 'L', icone: '🍾' },
+                { id: 'acucar', nome: 'Açúcar', quantidade: 1, unidade: 'kg', icone: '🍚' },
+                { id: 'cafe', nome: 'Café', quantidade: 0.5, unidade: 'kg', icone: '☕' },
+                { id: 'macarrao', nome: 'Macarrão', quantidade: 0.5, unidade: 'unid', icone: '🍝' },
+                { id: 'sal', nome: 'Sal', quantidade: 0.5, unidade: 'pacote', icone: '🧂' },
+                { id: 'biscoito', nome: 'Biscoito', quantidade: 0.5, unidade: 'pacote', icone: '🍪' },
+                { id: 'sabao-po', nome: 'Sabão em Pó', quantidade: 1, unidade: 'kg', icone: '🧺' },
+                { id: 'agua-sanitaria', nome: 'Água Sanitária', quantidade: 1, unidade: 'unid', icone: '🧪' },
+                { id: 'amaciante', nome: 'Amaciante', quantidade: 1, unidade: 'L', icone: '🧴' },
+                { id: 'desinfetante', nome: 'Desinfetante',  quantidade: 1, unidade: 'L',icone: '🦠' },
+                { id: 'esponja', nome: 'Esponja', quantidade: 1, unidade: 'unid', icone: '🧽' },
+                { id: 'saco-lixo', nome: 'Saco de Lixo', quantidade: 1, unidade: 'unid', icone: '🗑️' },
+                { id: 'detergente', nome: 'Detergente', quantidade: 2, unidade: 'unid', icone: '🧼' },
+                { id: 'papel-higienico', nome: 'Papel Higiênico', quantidade: 1, unidade: 'pacote', icone: '🚽' }
+            ];
+
+            const congeladosOutros = [
+                { id: 'carne-moida', nome: 'Carne Moída', quantidade: 0.5, unidade: 'kg', icone: '🥩' },
+                { id: 'frango-congelado', nome: 'Frango Congelado', quantidade: 1, unidade: 'kg', icone: '🍗' },
+                { id: 'vegetais-congelados', nome: 'Vegetais Congelados', quantidade: 1, unidade: 'pacote', icone: '🥦' },
+                { id: 'sorvete', nome: 'Sorvete', quantidade: 1, unidade: 'unid', icone: '🍦' },
+                { id: 'aguacoco', nome: 'Água de Coco', quantidade: 1, unidade: 'unid', icone: '💧' },
+                { id: 'suco', nome: 'Suco', quantidade: 1, unidade: 'unid', icone: '🧃' },
+                { id: 'leite', nome: 'Leite', quantidade: 1, unidade: 'L', icone: '🥛' },
+                { id: 'cerveja', nome: 'Cerveja',  quantidade: 1, unidade: 'unid',icone: '🍺' },
+                { id: 'vinho', nome: 'Vinho', quantidade: 1, unidade: 'unid', icone: '🍷' },
+                { id: 'cha', nome: 'Chá',quantidade: 1, unidade: 'unid', icone: '☕' },
+                { id: 'refrigerante', nome: 'Refrigerante', quantidade: 2, unidade: 'L', icone: '🥤' },
+                { id: 'agua-mineral', nome: 'Água Mineral', quantidade: 6, unidade: 'unid', icone: '💧' }
+            ];
+
+            // --- Funções Principais ---
+
+            function criarCheckboxItem(item, tipo) {
+                const div = document.createElement('div');
+                div.className = 'card bg-white border border-gray-200 rounded-lg p-3 hover:border-blue-300';
+                div.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="${item.id}" class="checkbox-item hidden" data-tipo="${tipo}" data-id="${item.id}">
+                            <label for="${item.id}" class="flex items-center w-full cursor-pointer p-2 rounded-md border border-transparent">
+                                <span class="text-xl mr-2">${item.icone}</span>
+                                <span class="font-medium mr-4">${item.nome}</span>
+                                <span class="check-icon hidden text-blue-500">✓</span>
+                            </label>
+                        </div>
+                        <div class="flex items-center ml-auto"> <input type="number" id="qty-${item.id}"
+                                class="w-20 text-center border border-gray-300 rounded-md py-1 px-2 text-sm"
+                                value="${item.quantidade}" min="0.1" step="${item.unidade === 'kg' || item.unidade === 'L' ? '0.1' : '1'}">
+                            <span class="ml-1 text-sm text-gray-600">${item.unidade}</span>
+                        </div>
+                    </div>
+                `;
+
+                // Event Listeners para o checkbox e o input de quantidade
+                const checkbox = div.querySelector(`#${item.id}`);
+                const qtyInput = div.querySelector(`#qty-${item.id}`);
+
+                checkbox.addEventListener('change', gerarListaDeCompras);
+                qtyInput.addEventListener('input', () => {
+                    // Se o usuário digitar uma quantidade, auto-seleciona o checkbox
+                    if (qtyInput.value > 0 && !checkbox.checked) {
+                        checkbox.checked = true;
+                        // Forçar a atualização visual do label
+                        const label = document.querySelector(`label[for="${checkbox.id}"]`);
+                        if (label) {
+                            label.classList.add('bg-blue-100', 'border-blue-500');
+                            const checkIcon = label.querySelector('.check-icon');
+                            if (checkIcon) checkIcon.classList.remove('hidden');
+                        }
+                    }
+                    if (qtyInput.value <= 0 && checkbox.checked) {
+                         checkbox.checked = false;
+                         const label = document.querySelector(`label[for="${checkbox.id}"]`);
+                        if (label) {
+                            label.classList.remove('bg-blue-100', 'border-blue-500');
+                            const checkIcon = label.querySelector('.check-icon');
+                            if (checkIcon) checkIcon.classList.add('hidden');
+                        }
+                    }
+                    gerarListaDeCompras();
+                });
+
+                // Inicializa o estado do checkbox e do input de quantidade
+                if (checkbox.checked) {
+                    const label = div.querySelector(`label[for="${item.id}"]`);
+                    if (label) {
+                        label.classList.add('bg-blue-100', 'border-blue-500');
+                        const checkIcon = label.querySelector('.check-icon');
+                        if (checkIcon) checkIcon.classList.remove('hidden');
+                    }
+                }
+
+                return div;
+            }
+
+            function preencherContainersDeItens() {
+                hortifruti.forEach(item => hortifrutiContainer.appendChild(criarCheckboxItem(item, 'hortifruti')));
+                padariaLaticinios.forEach(item => padariaLaticiniosContainer.appendChild(criarCheckboxItem(item, 'padariaLaticinios')));
+                merceariaLimpeza.forEach(item => merceariaLimpezaContainer.appendChild(criarCheckboxItem(item, 'merceariaLimpeza')));
+                congeladosOutros.forEach(item => congeladosOutrosContainer.appendChild(criarCheckboxItem(item, 'congeladosOutros')));
+            }
+
+            function gerarListaDeCompras() {
+                const itensSelecionadosParaLista = [];
+
+                document.querySelectorAll('.checkbox-item').forEach(checkbox => {
+                    const id = checkbox.dataset.id;
+                    const tipo = checkbox.dataset.tipo;
+                    const qtyInput = document.getElementById(`qty-${id}`);
+                    let quantidade = parseFloat(qtyInput.value);
+
+                    // Apenas adiciona à lista se o checkbox estiver marcado E a quantidade for maior que zero
+                    if (checkbox.checked && quantidade > 0) {
+                        let itemOriginal;
+                        if (tipo === 'hortifruti') itemOriginal = hortifruti.find(c => c.id === id);
+                        else if (tipo === 'padariaLaticinios') itemOriginal = padariaLaticinios.find(a => a.id === id);
+                        else if (tipo === 'merceariaLimpeza') itemOriginal = merceariaLimpeza.find(b => b.id === id);
+                        else if (tipo === 'congeladosOutros') itemOriginal = congeladosOutros.find(b => b.id === id);
+
+                        if (itemOriginal) {
+                            itensSelecionadosParaLista.push({
+                                ...itemOriginal,
+                                quantidadeCalculada: quantidade
+                            });
+                        }
+                    }
+                });
+
+                if (itensSelecionadosParaLista.length === 0) {
+                    listaComprasDiv.innerHTML = '<p class="text-gray-500 text-center italic">Selecione os itens acima e insira as quantidades para gerar sua lista</p>';
+                } else {
+                    listaComprasDiv.innerHTML = '';
+                    const gruposDeItens = {
+                        hortifruti: { titulo: 'Hortifrúti', itens: [] },
+                        padariaLaticinios: { titulo: 'Padaria e Laticínios', itens: [] },
+                        merceariaLimpeza: { titulo: 'Mercearia e Limpeza', itens: [] },
+                        congeladosOutros: { titulo: 'Congelados e Outros', itens: [] }
+                    };
+
+                    itensSelecionadosParaLista.forEach(item => {
+                        let tipoDoItem;
+                        if (hortifruti.some(c => c.id === item.id)) tipoDoItem = 'hortifruti';
+                        else if (padariaLaticinios.some(a => a.id === item.id)) tipoDoItem = 'padariaLaticinios';
+                        else if (merceariaLimpeza.some(b => b.id === item.id)) tipoDoItem = 'merceariaLimpeza';
+                        else if (congeladosOutros.some(b => b.id === item.id)) tipoDoItem = 'congeladosOutros';
+                        
+                        if (tipoDoItem) gruposDeItens[tipoDoItem].itens.push(item);
+                    });
+
+                    for (const [, grupo] of Object.entries(gruposDeItens)) {
+                        if (grupo.itens.length > 0) {
+                            const grupoDiv = document.createElement('div');
+                            grupoDiv.className = 'mb-4';
+                            const tituloGrupo = document.createElement('h3');
+                            tituloGrupo.className = 'font-semibold text-blue-600 mb-2 text-lg';
+                            tituloGrupo.textContent = grupo.titulo;
+                            grupoDiv.appendChild(tituloGrupo);
+                            const ul = document.createElement('ul');
+                            ul.className = 'space-y-1 pl-1';
+                            grupo.itens.forEach(item => {
+                                const li = document.createElement('li');
+                                li.className = 'flex justify-between items-center border-b border-gray-100 py-1';
+                                li.innerHTML = `
+                                    <div class="flex items-center">
+                                        <span class="mr-2 text-lg">${item.icone}</span> <span class="text-sm">${item.nome}</span> </div>
+                                    <span class="font-medium text-sm">${item.quantidadeCalculada} ${item.unidade}</span>
+                                `;
+                                ul.appendChild(li);
+                            });
+                            grupoDiv.appendChild(ul);
+                            listaComprasDiv.appendChild(grupoDiv);
+                        }
+                    }
+
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'mt-4 pt-2 border-t border-gray-200 text-sm text-gray-600 print-pdf-only';
+                    infoDiv.innerHTML = `
+                        <p class="text-center">Lista de compras personalizada.</p>
+                        <p class="text-center text-xs mt-1">Lista gerada em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}</p>
+                    `;
+                    listaComprasDiv.appendChild(infoDiv);
+                }
+            }
+
+            // --- Função para Gerar PDF ---
+            function gerarPDF() {
+                const doc = new jsPDF();
+                let yPos = 20;
+                const lineHeight = 7;
+                const pageMargin = 20;
+
+                doc.setFontSize(18);
+                doc.setFont("helvetica", "bold");
+                doc.text("Lista de Compras de Supermercado", doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
+                yPos += lineHeight * 2;
+
+                const itensSelecionadosParaPDF = [];
+                document.querySelectorAll('.checkbox-item:checked').forEach(checkbox => {
+                    const id = checkbox.dataset.id;
+                    const tipo = checkbox.dataset.tipo;
+                    const qtyInput = document.getElementById(`qty-${id}`);
+                    let quantidade = parseFloat(qtyInput.value);
+
+                    if (quantidade > 0) { // Apenas inclui no PDF se a quantidade for maior que zero
+                        let itemOriginal;
+                        if (tipo === 'hortifruti') itemOriginal = hortifruti.find(c => c.id === id);
+                        else if (tipo === 'padariaLaticinios') itemOriginal = padariaLaticinios.find(a => a.id === id);
+                        else if (tipo === 'merceariaLimpeza') itemOriginal = merceariaLimpeza.find(b => b.id === id);
+                        else if (tipo === 'congeladosOutros') itemOriginal = congeladosOutros.find(b => b.id === id);
+
+                        if (itemOriginal) {
+                            itensSelecionadosParaPDF.push({
+                                ...itemOriginal,
+                                quantidadeCalculada: quantidade
+                            });
+                        }
+                    }
+                });
+
+                if (itensSelecionadosParaPDF.length === 0) {
+                    doc.setFontSize(12);
+                    doc.setFont("helvetica", "italic");
+                    doc.text("Nenhum item selecionado para a lista.", pageMargin, yPos);
+                    doc.save("lista-compras.pdf");
+                    return;
+                }
+
+                const gruposDeItens = {
+                    hortifruti: { titulo: 'Hortifrúti', itens: [] },
+                    padariaLaticinios: { titulo: 'Padaria e Laticínios', itens: [] },
+                    merceariaLimpeza: { titulo: 'Mercearia e Limpeza', itens: [] },
+                    congeladosOutros: { titulo: 'Congelados e Outros', itens: [] }
+                };
+
+                itensSelecionadosParaPDF.forEach(item => {
+                    let tipoDoItem;
+                    if (hortifruti.some(c => c.id === item.id)) tipoDoItem = 'hortifruti';
+                    else if (padariaLaticinios.some(a => a.id === item.id)) tipoDoItem = 'padariaLaticinios';
+                    else if (merceariaLimpeza.some(b => b.id === item.id)) tipoDoItem = 'merceariaLimpeza';
+                    else if (congeladosOutros.some(b => b.id === item.id)) tipoDoItem = 'congeladosOutros';
+
+                    if (tipoDoItem) gruposDeItens[tipoDoItem].itens.push(item);
+                });
+
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "normal");
+
+                for (const [, grupo] of Object.entries(gruposDeItens)) {
+                    if (grupo.itens.length > 0) {
+                        if (yPos + lineHeight * (grupo.itens.length + 2) > doc.internal.pageSize.getHeight() - pageMargin) {
+                            doc.addPage();
+                            yPos = pageMargin;
+                        }
+
+                        doc.setFontSize(14);
+                        doc.setFont("helvetica", "bold");
+                        doc.text(grupo.titulo, pageMargin, yPos);
+                        yPos += lineHeight * 1.5;
+                        doc.setFontSize(10);
+                        doc.setFont("helvetica", "normal");
+
+                        grupo.itens.forEach(item => {
+                             if (yPos + lineHeight > doc.internal.pageSize.getHeight() - pageMargin) {
+                                doc.addPage();
+                                yPos = pageMargin;
+                            }
+                            const itemText = `${item.nome}`;
+                            const quantidadeText = `${item.quantidadeCalculada} ${item.unidade}`;
+                            doc.text(itemText, pageMargin + 5, yPos);
+                            doc.text(quantidadeText, doc.internal.pageSize.getWidth() - pageMargin - doc.getTextWidth(quantidadeText), yPos);
+                            yPos += lineHeight;
+                        });
+                        yPos += lineHeight;
+                    }
+                }
+
+                if (yPos + lineHeight * 2 > doc.internal.pageSize.getHeight() - pageMargin) {
+                    doc.addPage();
+                    yPos = pageMargin;
+                }
+                doc.setFontSize(9);
+                doc.setFont("helvetica", "italic");
+                const infoFooter1 = `Lista de compras personalizada.`;
+                const infoFooter2 = `Lista gerada em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`;
+
+                doc.text(infoFooter1, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
+                yPos += lineHeight * 0.8;
+                doc.text(infoFooter2, doc.internal.pageSize.getWidth() / 2, yPos, { align: "center" });
+
+                doc.save("lista-compras.pdf");
+            }
+
+
+            // --- Event Listeners ---
+            btnLimpar.addEventListener('click', function() {
+                document.querySelectorAll('.checkbox-item').forEach(checkbox => {
+                    checkbox.checked = false;
+                    const label = document.querySelector(`label[for="${checkbox.id}"]`);
+                    if (label) {
+                        label.classList.remove('bg-blue-100', 'border-blue-500');
+                        const checkIcon = label.querySelector('.check-icon');
+                        if (checkIcon) checkIcon.classList.add('hidden');
+                    }
+                });
+                document.querySelectorAll('input[type="number"]').forEach(input => {
+                    // Resetar para a quantidade inicial definida nos dados (ou 0 se preferir)
+                    const itemId = input.id.replace('qty-', '');
+                    let originalItem;
+                    originalItem = hortifruti.find(item => item.id === itemId) ||
+                                   padariaLaticinios.find(item => item.id === itemId) ||
+                                   merceariaLimpeza.find(item => item.id === itemId) ||
+                                   congeladosOutros.find(item => item.id === itemId);
+                    input.value = originalItem ? originalItem.quantidade : 0; // Pode ser 0 se quiser que zere
+                });
+                gerarListaDeCompras();
+            });
+
+            btnImprimir.addEventListener('click', function() {
+                const infoDiv = listaComprasDiv.querySelector('.print-pdf-only');
+                if (infoDiv) infoDiv.style.display = 'block';
+                window.print();
+            });
+
+            btnPdf.addEventListener('click', gerarPDF);
+
+            // --- Inicialização ---
+            preencherContainersDeItens();
+            gerarListaDeCompras(); // Gera a lista inicial sem itens selecionados
+        });
+    </script>
+</body>
+
+</html>
