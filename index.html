@@ -74,13 +74,25 @@
             </div>
 
             <div class="mt-8">
-                <h2 class="text-xl font-semibold mb-4 text-blue-700 border-b pb-2">Mercearia e Limpeza</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" id="mercearia-limpeza-container">
+                <h2 class="text-xl font-semibold mb-4 text-blue-700 border-b pb-2">Mercearia</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" id="mercearia-container">
                 </div>
             </div>
+           <div class="mt-8">
+                <h2 class="text-xl font-semibold mb-4 text-blue-700 border-b pb-2">Limpeza</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" id="limpeza-container">
+                </div>
+            </div>
+
              <div class="mt-8">
-                <h2 class="text-xl font-semibold mb-4 text-blue-700 border-b pb-2">Congelados e Outros</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" id="congelados-outros-container">
+                <h2 class="text-xl font-semibold mb-4 text-blue-700 border-b pb-2">Congelados</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" id="congelados-container">
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <h2 class="text-xl font-semibold mb-4 text-blue-700 border-b pb-2">Bebidas</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" id="bebidas-container">
                 </div>
             </div>
         </div>
@@ -111,8 +123,11 @@
 
             const hortifrutiContainer = document.getElementById('hortifruti-container');
             const padariaLaticiniosContainer = document.getElementById('padaria-laticinios-container');
-            const merceariaLimpezaContainer = document.getElementById('mercearia-limpeza-container');
-            const congeladosOutrosContainer = document.getElementById('congelados-outros-container');
+            const merceariaContainer = document.getElementById('mercearia-container');
+            const limpezaContainer = document.getElementById('limpeza-container');
+            const congeladosContainer = document.getElementById('congelados-container');
+            const bebidasContainer = document.getElementById('bebidas-container');
+
             const listaComprasDiv = document.getElementById('lista-compras');
             const btnLimpar = document.getElementById('btn-limpar');
             const btnImprimir = document.getElementById('btn-imprimir');
@@ -121,7 +136,6 @@
             // Dados dos Itens com quantidades iniciais sugeridas (que o usuário vai modificar)
             const hortifruti = [
                 { id: 'banana', nome: 'Banana', quantidade: 6, unidade: 'unid', icone: '🍌' },
-                { id: 'tomate', nome: 'Tomate', quantidade: 1, unidade: 'kg', icone: '🍅' },
                 { id: 'maca', nome: 'Maçã', quantidade: 5, unidade: 'unid', icone: '🍎' },
                 { id: 'batata', nome: 'Batata', quantidade: 5, unidade: 'unid', icone: '🥔' },
                 { id: 'laranja', nome: 'Laranja', quantidade: 8, unidade: 'unid', icone: '🍊' },
@@ -136,10 +150,13 @@
                 { id: 'leite', nome: 'Leite', quantidade: 2, unidade: 'L', icone: '🥛' },
                 { id: 'queijo-prato', nome: 'Queijo Prato', quantidade: 0.3, unidade: 'kg', icone: '🧀' },
                 { id: 'manteiga', nome: 'Manteiga', quantidade: 0.2, unidade: 'kg', icone: '🧈' },
+                { id: 'pao-integral', nome: 'Pão Integral', quantidade: 2, unidade: 'L', icone: '🍞' },
+                { id: 'queijo-coalho', nome: 'Queijo Coalho', quantidade: 0.3, unidade: 'kg', icone: '🧀' },
+                { id: 'queijo-mussarela', nome: 'Queijo Mussarela', quantidade: 0.3, unidade: 'kg', icone: '🧀' },
                 { id: 'iogurte', nome: 'Iogurte', quantidade: 4, unidade: 'unid', icone: '🍦' }
             ];
 
-            const merceariaLimpeza = [
+            const mercearia = [
                 { id: 'arroz', nome: 'Arroz', quantidade: 5, unidade: 'kg', icone: '🍚' },
                 { id: 'feijao', nome: 'Feijão', quantidade: 1, unidade: 'kg', icone: '🫘' },
                 { id: 'oleo', nome: 'Óleo de Cozinha', quantidade: 1, unidade: 'L', icone: '🍾' },
@@ -147,8 +164,10 @@
                 { id: 'cafe', nome: 'Café', quantidade: 0.5, unidade: 'kg', icone: '☕' },
                 { id: 'macarrao', nome: 'Macarrão', quantidade: 0.5, unidade: 'unid', icone: '🍝' },
                 { id: 'sal', nome: 'Sal', quantidade: 0.5, unidade: 'pacote', icone: '🧂' },
-                { id: 'biscoito', nome: 'Biscoito', quantidade: 0.5, unidade: 'pacote', icone: '🍪' },
-                { id: 'sabao-po', nome: 'Sabão em Pó', quantidade: 1, unidade: 'kg', icone: '🧺' },
+                { id: 'biscoito', nome: 'Biscoito', quantidade: 0.5, unidade: 'pacote', icone: '🍪' }
+                
+            ];
+            const limpeza = [
                 { id: 'agua-sanitaria', nome: 'Água Sanitária', quantidade: 1, unidade: 'unid', icone: '🧪' },
                 { id: 'amaciante', nome: 'Amaciante', quantidade: 1, unidade: 'L', icone: '🧴' },
                 { id: 'desinfetante', nome: 'Desinfetante',  quantidade: 1, unidade: 'L',icone: '🦠' },
@@ -158,20 +177,24 @@
                 { id: 'papel-higienico', nome: 'Papel Higiênico', quantidade: 1, unidade: 'pacote', icone: '🚽' }
             ];
 
-            const congeladosOutros = [
+            const congelados = [
                 { id: 'carne-moida', nome: 'Carne Moída', quantidade: 0.5, unidade: 'kg', icone: '🥩' },
                 { id: 'frango-congelado', nome: 'Frango Congelado', quantidade: 1, unidade: 'kg', icone: '🍗' },
                 { id: 'vegetais-congelados', nome: 'Vegetais Congelados', quantidade: 1, unidade: 'pacote', icone: '🥦' },
-                { id: 'sorvete', nome: 'Sorvete', quantidade: 1, unidade: 'unid', icone: '🍦' },
-                { id: 'aguacoco', nome: 'Água de Coco', quantidade: 1, unidade: 'unid', icone: '💧' },
+                { id: 'sorvete', nome: 'Sorvete', quantidade: 1, unidade: 'unid', icone: '🍦' }                
+            ];
+
+            const bebidas = [
+                { id: 'agua-coco', nome: 'Água de Coco', quantidade: 1, unidade: 'unid', icone: '💧' },
                 { id: 'suco', nome: 'Suco', quantidade: 1, unidade: 'unid', icone: '🧃' },
-                { id: 'leite', nome: 'Leite', quantidade: 1, unidade: 'L', icone: '🥛' },
+                { id: 'energetico', nome: 'Energético', quantidade: 1, unidade: 'L', icone: '🥤' },
                 { id: 'cerveja', nome: 'Cerveja',  quantidade: 1, unidade: 'unid',icone: '🍺' },
                 { id: 'vinho', nome: 'Vinho', quantidade: 1, unidade: 'unid', icone: '🍷' },
                 { id: 'cha', nome: 'Chá',quantidade: 1, unidade: 'unid', icone: '☕' },
                 { id: 'refrigerante', nome: 'Refrigerante', quantidade: 2, unidade: 'L', icone: '🥤' },
                 { id: 'agua-mineral', nome: 'Água Mineral', quantidade: 6, unidade: 'unid', icone: '💧' }
             ];
+
 
             // --- Funções Principais ---
 
@@ -241,8 +264,10 @@
             function preencherContainersDeItens() {
                 hortifruti.forEach(item => hortifrutiContainer.appendChild(criarCheckboxItem(item, 'hortifruti')));
                 padariaLaticinios.forEach(item => padariaLaticiniosContainer.appendChild(criarCheckboxItem(item, 'padariaLaticinios')));
-                merceariaLimpeza.forEach(item => merceariaLimpezaContainer.appendChild(criarCheckboxItem(item, 'merceariaLimpeza')));
-                congeladosOutros.forEach(item => congeladosOutrosContainer.appendChild(criarCheckboxItem(item, 'congeladosOutros')));
+                mercearia.forEach(item => merceariaContainer.appendChild(criarCheckboxItem(item, 'mercearia')));
+                congelados.forEach(item => congeladosContainer.appendChild(criarCheckboxItem(item, 'congelados')));
+                limpeza.forEach(item => limpezaContainer.appendChild(criarCheckboxItem(item, 'limpeza')));
+                bebidas.forEach(item => bebidasContainer.appendChild(criarCheckboxItem(item, 'bebidas')));
             }
 
             function gerarListaDeCompras() {
@@ -259,8 +284,10 @@
                         let itemOriginal;
                         if (tipo === 'hortifruti') itemOriginal = hortifruti.find(c => c.id === id);
                         else if (tipo === 'padariaLaticinios') itemOriginal = padariaLaticinios.find(a => a.id === id);
-                        else if (tipo === 'merceariaLimpeza') itemOriginal = merceariaLimpeza.find(b => b.id === id);
-                        else if (tipo === 'congeladosOutros') itemOriginal = congeladosOutros.find(b => b.id === id);
+                        else if (tipo === 'mercearia') itemOriginal = mercearia.find(b => b.id === id);
+                        else if (tipo === 'congelados') itemOriginal = congelados.find(b => b.id === id);
+                        else if (tipo === 'limpeza') itemOriginal = limpeza.find(b => b.id === id);
+                        else if (tipo === 'bebidas') itemOriginal = bebidas.find(b => b.id === id);
 
                         if (itemOriginal) {
                             itensSelecionadosParaLista.push({
@@ -278,16 +305,21 @@
                     const gruposDeItens = {
                         hortifruti: { titulo: 'Hortifrúti', itens: [] },
                         padariaLaticinios: { titulo: 'Padaria e Laticínios', itens: [] },
-                        merceariaLimpeza: { titulo: 'Mercearia e Limpeza', itens: [] },
-                        congeladosOutros: { titulo: 'Congelados e Outros', itens: [] }
+                        mercearia: { titulo: 'Mercearia', itens: [] },
+                        congelados: { titulo: 'Congelados', itens: [] },
+                        limpeza: { titulo: 'Limpeza', itens: [] },
+                        bebidas: { titulo: 'Bebidas', itens: [] }
+
                     };
 
                     itensSelecionadosParaLista.forEach(item => {
                         let tipoDoItem;
                         if (hortifruti.some(c => c.id === item.id)) tipoDoItem = 'hortifruti';
                         else if (padariaLaticinios.some(a => a.id === item.id)) tipoDoItem = 'padariaLaticinios';
-                        else if (merceariaLimpeza.some(b => b.id === item.id)) tipoDoItem = 'merceariaLimpeza';
-                        else if (congeladosOutros.some(b => b.id === item.id)) tipoDoItem = 'congeladosOutros';
+                        else if (mercearia.some(b => b.id === item.id)) tipoDoItem = 'mercearia';
+                        else if (congelados.some(b => b.id === item.id)) tipoDoItem = 'congelados';
+                        else if (limpeza.some(b => b.id === item.id)) tipoDoItem = 'limpeza';
+                        else if (bebidas.some(b => b.id === item.id)) tipoDoItem = 'bebidas';
                         
                         if (tipoDoItem) gruposDeItens[tipoDoItem].itens.push(item);
                     });
@@ -350,8 +382,12 @@
                         let itemOriginal;
                         if (tipo === 'hortifruti') itemOriginal = hortifruti.find(c => c.id === id);
                         else if (tipo === 'padariaLaticinios') itemOriginal = padariaLaticinios.find(a => a.id === id);
-                        else if (tipo === 'merceariaLimpeza') itemOriginal = merceariaLimpeza.find(b => b.id === id);
-                        else if (tipo === 'congeladosOutros') itemOriginal = congeladosOutros.find(b => b.id === id);
+                        else if (tipo === 'mercearia') itemOriginal = mercearia.find(b => b.id === id);
+                        else if (tipo === 'congelados') itemOriginal = congelados.find(b => b.id === id);
+                        else if (tipo === 'limpeza') itemOriginal = limpeza.find(b => b.id === id);
+                        else if (tipo === 'bebidas') itemOriginal = bebidas.find(b => b.id === id);
+
+
 
                         if (itemOriginal) {
                             itensSelecionadosParaPDF.push({
@@ -373,16 +409,23 @@
                 const gruposDeItens = {
                     hortifruti: { titulo: 'Hortifrúti', itens: [] },
                     padariaLaticinios: { titulo: 'Padaria e Laticínios', itens: [] },
-                    merceariaLimpeza: { titulo: 'Mercearia e Limpeza', itens: [] },
-                    congeladosOutros: { titulo: 'Congelados e Outros', itens: [] }
+                    mercearia: { titulo: 'Mercearia', itens: [] },
+                    congelados: { titulo: 'Congelados', itens: [] },
+                    limpeza: { titulo: 'Limpeza', itens: [] },
+                    bebidas: { titulo: 'Bebidas', itens: [] }
+
                 };
 
                 itensSelecionadosParaPDF.forEach(item => {
                     let tipoDoItem;
                     if (hortifruti.some(c => c.id === item.id)) tipoDoItem = 'hortifruti';
                     else if (padariaLaticinios.some(a => a.id === item.id)) tipoDoItem = 'padariaLaticinios';
-                    else if (merceariaLimpeza.some(b => b.id === item.id)) tipoDoItem = 'merceariaLimpeza';
-                    else if (congeladosOutros.some(b => b.id === item.id)) tipoDoItem = 'congeladosOutros';
+                    else if (mercearia.some(b => b.id === item.id)) tipoDoItem = 'mercearia';
+                    else if (congelados.some(b => b.id === item.id)) tipoDoItem = 'congelados';
+                    else if (limpeza.some(b => b.id === item.id)) tipoDoItem = 'limpeza';
+                    else if (bebidas.some(b => b.id === item.id)) tipoDoItem = 'bebidas';
+
+
 
                     if (tipoDoItem) gruposDeItens[tipoDoItem].itens.push(item);
                 });
@@ -453,8 +496,11 @@
                     let originalItem;
                     originalItem = hortifruti.find(item => item.id === itemId) ||
                                    padariaLaticinios.find(item => item.id === itemId) ||
-                                   merceariaLimpeza.find(item => item.id === itemId) ||
-                                   congeladosOutros.find(item => item.id === itemId);
+                                   mercearia.find(item => item.id === itemId) ||
+                                   congelados.find(item => item.id === itemId)||
+                                   limpeza.find(item => item.id === itemId) ||
+                                   bebidas.find(item => item.id === itemId);
+
                     input.value = originalItem ? originalItem.quantidade : 0; // Pode ser 0 se quiser que zere
                 });
                 gerarListaDeCompras();
